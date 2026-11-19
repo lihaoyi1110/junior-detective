@@ -20,5 +20,6 @@ node_modules/
 .pnpm-store/
 
 # 本地产物
+.wrangler/
 .trae-html-share-packages/
 *.log
