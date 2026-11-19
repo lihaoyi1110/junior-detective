@@ -31,6 +31,7 @@ cloudflare/           Cloudflare Pages Functions 源码
   judge.js            /api/judge
   stt.js              /api/stt
 tools/build-web.js    构建：prototype/ + cloudflare/ → web/
+tools/deploy.ps1      构建并部署到 Cloudflare Pages
 web/                  构建产物（静态站点 + functions/）
 ```
 
@@ -72,15 +73,16 @@ $env:HTTPS='1'; python server.py
 
 ## 构建与部署
 
-```bash
-node tools/build-web.js
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/deploy.ps1
 ```
 
-构建结果在 `web/`，包含静态文件与 `functions/api/*`。
+脚本会先构建 `web/`，再进入该目录部署到 Cloudflare Pages。构建结果包含静态文件与 `functions/api/*`。
 
-部署到 Cloudflare Pages 时，务必在 `web` 目录内执行，否则 Pages Functions 不会被编译：
+手动执行时，务必在 `web` 目录内部署，否则 Pages Functions 不会被编译：
 
 ```powershell
+node tools/build-web.js
 cd web
 wrangler pages deploy . --project-name junior-detective --commit-dirty=true
 ```
