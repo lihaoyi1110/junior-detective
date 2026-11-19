@@ -1,0 +1,39 @@
+{
+  "pages": [
+    "pages/welcome/welcome",
+    "pages/home/home",
+    "pages/profile/profile",
+    "pages/my/my",
+    "pages/case/case",
+    "pages/parent/parent"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#123A2E",
+    "navigationBarTitleText": "少年侦探社",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F7F1E1"
+  },
+  "tabBar": {
+    "color": "#93A99F",
+    "selectedColor": "#D8B063",
+    "backgroundColor": "#123A2E",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "案卷"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "档案"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

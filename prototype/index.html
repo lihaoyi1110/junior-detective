@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#123A2E">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>少年侦探社 · 解题档案</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<script>
+  /* 主题先于样式生效，避免夜间模式闪白；跟随系统时自动跟随切换 */
+  (function(){
+    var K = 'detective_theme_v1';
+    function apply(){
+      var t = null;
+      try{ t = localStorage.getItem(K); }catch(e){}
+      var dark = t === 'dark' ||
+        (t !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    }
+    apply();
+    try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply); }catch(e){}
+    window.Theme = {
+      mode(){ try{ return localStorage.getItem(K) || 'auto'; }catch(e){ return 'auto'; } },
+      isDark(){ return document.documentElement.getAttribute('data-theme') === 'dark'; },
+      set(mode){
+        try{
+          if(mode === 'auto') localStorage.removeItem(K);
+          else localStorage.setItem(K, mode);
+        }catch(e){}
+        apply();
+        var m = document.querySelector('meta[name="theme-color"]');
+        if(m) m.setAttribute('content', this.isDark() ? '#0E2A22' : '#123A2E');
+      }
+    };
+  })();
+</script>
+<link rel="stylesheet" href="styles.css?v=27">
+</head>
+<body>
+<div id="app"></div>
+<div id="boot" role="status" aria-live="polite">
+  <div class="boot-in">
+    <img class="boot-logo" src="icon.svg" alt="">
+    <b class="boot-name">少年侦探社</b>
+    <span class="boot-line"></span>
+    <p class="boot-tip">正在调取案卷…</p>
+  </div>
+</div>
+<script>
+  window.MODEL_CONFIG = { endpoint:'/api/judge', model:'deepseek-chat', timeout:20000 };
+</script>
+<script src="data.js?v=27"></script>
+<script src="data-1.js?v=27"></script>
+<script src="data-2.js?v=27"></script>
+<script src="data-3.js?v=27"></script>
+<script src="data-4.js?v=27"></script>
+<script src="data-5.js?v=27"></script>
+<script src="data-6.js?v=27"></script>
+<script src="data-7.js?v=27"></script>
+<script src="data-8.js?v=27"></script>
+<script src="engine.js?v=27"></script>
+<script src="charts.js?v=27"></script>
+<script src="fx.js?v=27"></script>
+<script src="model.js?v=27"></script>
+<script src="account.js?v=27"></script>
+<script src="parent.js?v=27"></script>
+<script src="case.js?v=27"></script>
+<script src="app.js?v=27"></script>
+<script>
+  /* iOS 上键盘弹出时 fixed 输入条会被盖住：用可视视口高度把输入条抬起来 */
+  (function(){
+    var vv = window.visualViewport;
+    if(!vv) return;
+    function fit(){
+      var gap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      document.documentElement.style.setProperty('--kb', gap + 'px');
+    }
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
+    fit();
+  })();
+  /* 离线可用：https 或本机地址下注册 Service Worker；局域网 http 不支持，直接跳过 */
+  (function(){
+    if(!('serviceWorker' in navigator)) return;
+    var h = location.hostname;
+    if(location.protocol !== 'https:' && h !== 'localhost' && h !== '127.0.0.1') return;
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js?v=27').catch(function(){});
+    });
+    /* 新版本接管后自动刷新一次：孩子不用自己找「刷新」，看到的立刻是新界面 */
+    var hadCtrl = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(!hadCtrl) return;
+      hadCtrl = false;
+      location.reload();
+    });
+  })();
+</script>
+</body>
+</html>

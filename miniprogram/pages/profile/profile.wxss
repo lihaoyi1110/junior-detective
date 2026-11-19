@@ -1,0 +1,8 @@
+.page { padding-top: 36rpx; }
+.radar-canvas { width: 100%; height: 600rpx; display: block; }
+.wactive { background: #FAF4E4; }
+.wcard { margin-bottom: 20rpx; }
+.wcard:last-child { margin-bottom: 0; }
+.wcard .txt { display: block; }
+.wcard .lab { margin-top: 2rpx; }
+.recrow .no { width: 140rpx; }

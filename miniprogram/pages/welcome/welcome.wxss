@@ -1,0 +1,138 @@
+page {
+  background: linear-gradient(158deg, #3A2C1E, #241A10 56%, #191109);
+}
+
+.wel {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(900rpx 520rpx at 50% 0%, rgba(216, 176, 99, .16), transparent 62%),
+    linear-gradient(158deg, #3A2C1E, #241A10 56%, #191109);
+  color: #F3EAD3;
+}
+
+/* ---------- 封面 ---------- */
+.cover { padding: 0 48rpx 40rpx; flex: none; }
+.brand { display: flex; align-items: center; margin-top: 60rpx; }
+.crest {
+  width: 108rpx; height: 108rpx; border-radius: 50%; flex: none;
+  border: 2rpx solid rgba(216, 176, 99, .7);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 30rpx; letter-spacing: 2rpx; color: var(--brass-2);
+  background: radial-gradient(circle at 34% 26%, rgba(216, 176, 99, .24), transparent 62%);
+}
+.crest.square { border-radius: 50%; margin-bottom: 22rpx; }
+.brandtext { margin-left: 26rpx; display: flex; flex-direction: column; }
+.kicker {
+  font-family: var(--mono); font-size: 16rpx; letter-spacing: 5rpx;
+  color: rgba(243, 234, 211, .46);
+}
+.brand-title {
+  font-family: var(--serif); font-size: 58rpx; letter-spacing: 4rpx;
+  color: #F7EEDA; margin-top: 10rpx; line-height: 1.25;
+}
+.lead {
+  display: block;
+  margin: 40rpx 0 0; font-size: 26rpx; line-height: 2;
+  color: rgba(243, 234, 211, .74);
+}
+.lead.sub { margin-top: 0; margin-bottom: 34rpx; }
+.stats { display: flex; border-top: 1rpx solid rgba(216, 176, 99, .22); padding-top: 24rpx; }
+.stat { flex: 1; display: flex; align-items: baseline; }
+.stat + .stat { border-left: 1rpx solid rgba(216, 176, 99, .16); padding-left: 22rpx; }
+.stat .n { font-family: var(--serif); font-size: 34rpx; color: var(--brass-2); }
+.stat .u { font-size: 19rpx; color: rgba(243, 234, 211, .5); margin-left: 8rpx; letter-spacing: 1rpx; }
+
+/* ---------- 身份面板 ---------- */
+.panel {
+  flex: 1; padding: 40rpx 44rpx calc(40rpx + env(safe-area-inset-bottom));
+  background: var(--paper); color: var(--ink);
+  border-radius: 40rpx 40rpx 0 0;
+  box-shadow: 0 -28rpx 68rpx rgba(0, 0, 0, .28);
+}
+.panelhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 26rpx; }
+.panelhead .t { font-family: var(--serif); font-size: 28rpx; letter-spacing: 4rpx; color: #2C2A22; }
+.panelhead .s { font-family: var(--mono); font-size: 16rpx; letter-spacing: 2rpx; color: var(--muted); }
+
+.rolecard {
+  display: flex; align-items: center;
+  padding: 28rpx 30rpx; margin-bottom: 20rpx;
+  background: var(--card); border: 1rpx solid var(--line);
+  border-left: 6rpx solid var(--green); border-radius: 4rpx;
+  box-shadow: 4rpx 6rpx 0 rgba(32, 32, 27, .05);
+}
+.rolecard.parent { border-left-color: #3A4E4A; }
+.roleactive { background: #FAF4E4; }
+.rc-ico {
+  width: 76rpx; height: 76rpx; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 32rpx; color: #F3E9CF;
+  background: radial-gradient(circle at 34% 28%, #1E5744, #103428 70%);
+}
+.rolecard.parent .rc-ico { background: radial-gradient(circle at 34% 28%, #4A615D, #2B3B39 70%); }
+.rc-main { flex: 1; min-width: 0; margin-left: 24rpx; display: flex; flex-direction: column; }
+.rc-b { font-family: var(--serif); font-size: 33rpx; font-weight: 600; letter-spacing: 1rpx; color: var(--ink); }
+.rc-s { font-size: 23rpx; color: var(--muted); margin-top: 6rpx; }
+.rc-arrow { flex: none; font-size: 32rpx; color: var(--brass); margin-left: 12rpx; }
+.legal {
+  display: block; text-align: center; margin-top: 28rpx;
+  font-size: 20rpx; line-height: 1.95; color: #9A917B;
+}
+.legal + .legal { margin-top: 4rpx; }
+
+/* ---------- 声明 ---------- */
+.consent {
+  min-height: 100vh; display: flex; flex-direction: column;
+  padding-left: 44rpx; padding-right: 44rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+}
+.wel-top { flex: 1; padding-top: 30rpx; }
+.c-title {
+  display: block; font-family: var(--serif); font-size: 56rpx; line-height: 1.3;
+  letter-spacing: 2rpx; color: #F7EEDA; margin: 18rpx 0 14rpx; font-weight: 600;
+}
+.c-sub { display: block; font-size: 24rpx; line-height: 1.95; color: rgba(243, 234, 211, .66); margin-bottom: 40rpx; }
+
+.citem {
+  display: flex; padding-bottom: 26rpx; margin-bottom: 26rpx;
+  border-bottom: 1rpx dashed rgba(216, 176, 99, .2);
+}
+.citem:last-of-type { border-bottom: none; }
+.cnum {
+  flex: none; width: 38rpx; height: 38rpx; border-radius: 50%; margin-top: 4rpx;
+  border: 1rpx solid rgba(216, 176, 99, .5);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 16rpx; color: var(--brass-2);
+}
+.cbody { flex: 1; margin-left: 22rpx; }
+.cb { display: block; font-size: 25rpx; font-weight: 600; letter-spacing: 1rpx; color: #F6ECD4; margin-bottom: 8rpx; }
+.cp { display: block; font-size: 22rpx; line-height: 1.95; color: rgba(243, 234, 211, .6); }
+
+.agree {
+  display: flex; align-items: flex-start;
+  padding: 24rpx 26rpx; margin-bottom: 26rpx;
+  border: 1rpx solid rgba(216, 176, 99, .34);
+  background: rgba(255, 255, 255, .04);
+}
+.agree .box {
+  width: 32rpx; height: 32rpx; flex: none; margin: 4rpx 18rpx 0 0;
+  border: 2rpx solid rgba(216, 176, 99, .72);
+  display: flex; align-items: center; justify-content: center;
+}
+.agree.on .box { background: var(--brass-2); border-color: var(--brass-2); }
+.agree.on .box::after { content: "✓"; font-size: 20rpx; color: #14261F; line-height: 1; }
+.agree text { font-size: 21rpx; line-height: 1.9; color: rgba(243, 234, 211, .76); }
+
+.wbtn {
+  width: 100%; padding: 26rpx 0; margin-bottom: 18rpx;
+  background: var(--brass-2); color: #1C1708;
+  border-radius: 3rpx; font-size: 29rpx; letter-spacing: 2rpx;
+}
+.wbtn::after { border: none; }
+.wbtn[disabled] { opacity: .32; }
+.wbtn.ghost { background: transparent; color: rgba(243, 234, 211, .72); border: 1rpx solid rgba(243, 234, 211, .26); }
+.foot {
+  display: block; text-align: center; margin-top: 14rpx;
+  font-family: var(--mono); font-size: 16rpx; letter-spacing: 3rpx;
+  color: rgba(243, 234, 211, .3);
+}

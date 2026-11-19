@@ -1,0 +1,234 @@
+<view class="pmast">
+  <view class="pmast-row">
+    <view>
+      <view class="pmast-title">学习观察报告</view>
+      <view class="date">{{name}} · {{dateText}}</view>
+    </view>
+    <view class="tag">家长模式</view>
+  </view>
+  <view class="pmast-actions">
+    <view class="pback" bindtap="toAccount">账号</view>
+    <view class="pback" bindtap="toChild">← 孩子端</view>
+  </view>
+</view>
+
+<view wx:if="{{kids.length > 1}}" class="pkids">
+  <text class="mono dim">当前孩子</text>
+  <view class="chips-row">
+    <view wx:for="{{kids}}" wx:key="id" class="mini {{item.id === activeId ? 'on' : ''}}"
+          data-id="{{item.id}}" bindtap="switchKid">{{item.name}}</view>
+  </view>
+</view>
+
+<view class="pnav">
+  <view class="tab {{tab === 'dash' ? 'on' : ''}}" data-tab="dash" bindtap="switchTab">能力看板</view>
+  <view class="tab {{tab === 'advice' ? 'on' : ''}}" data-tab="advice" bindtap="switchTab">行动建议</view>
+  <view class="tab {{tab === 'log' ? 'on' : ''}}" data-tab="log" bindtap="switchTab">练习记录</view>
+</view>
+
+<view wx:if="{{!hasData}}" class="pwrap">
+  <view class="psec"><text class="idx">一</text><text class="h">整体判断</text><text class="tail">先看结论</text></view>
+  <view class="card">
+    <text class="h-block">还没有可以判断的记录</text>
+    <view class="pnote">这份报告只用孩子在这台设备上完成的练习来生成。完成第一份案卷（五到六问）后，这里会出现整体判断、五维证据与本周建议。</view>
+  </view>
+
+  <view class="psec"><text class="idx">二</text><text class="h">能力证据</text><text class="tail">暂无样本</text></view>
+  <view class="card">
+    <text class="h-block">五项能力都还没有样本</text>
+    <view class="pnote">少于 3 个作答步骤时不下判断，这是刻意的：宁可空着，也不给一个看起来精确的假分数。</view>
+  </view>
+
+  <view class="psec"><text class="idx">三</text><text class="h">最近练习</text><text class="tail">时间线</text></view>
+  <view class="card">
+    <text class="h-block">还没有练习记录</text>
+    <view class="pnote">把手机交回孩子端，挑一份案卷开始。</view>
+  </view>
+
+  <view class="footnote">记录只保存在这台设备 · 作答文字仅用于判分</view>
+  <view class="linkbtn" bindtap="toChild">← 回到孩子端</view>
+</view>
+
+<block wx:else>
+  <!-- 能力看板 -->
+  <view wx:if="{{tab === 'dash'}}" class="pwrap">
+    <view class="psec"><text class="idx">一</text><text class="h">整体判断</text><text class="tail">先看结论</text></view>
+    <view class="card verdict">
+      <view class="verdict-fact">{{verdict.fact}}</view>
+      <view class="verdict-judge">{{verdict.judge}}</view>
+      <view class="vstats">
+        <view class="v"><text class="vnum">{{verdict.rate}}%</text><text>无提示完成率</text></view>
+        <view class="v"><text class="vnum">{{verdict.weakN}}</text><text>低于 70 分的维度</text></view>
+        <view class="v"><text class="vnum">{{verdict.n}}</text><text>累计练习次数</text></view>
+      </view>
+    </view>
+
+    <view class="psec"><text class="idx">二</text><text class="h">能力证据</text><text class="tail">结论的依据</text></view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">五维诊断</text><text class="hint">越靠外越稳</text></view>
+      <canvas type="2d" id="p-radar" class="c-radar"></canvas>
+      <view class="diaglist">
+        <view wx:for="{{diagRows}}" wx:key="name" class="diagrow">
+          <view class="dh">
+            <text class="dname">{{item.name}}</text>
+            <text class="score">{{item.score}}</text>
+            <text class="pill {{item.cls}}">{{item.level}}</text>
+            <text class="n">n={{item.n}}</text>
+          </view>
+          <text class="diag-txt">{{item.txt}}</text>
+        </view>
+      </view>
+      <view class="pnote">分数按“这一步是否用到提示”折算；n 是该维度累计的作答步骤数，少于 3 步时只作观察。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">题型熟练度</text><text class="hint">无提示完成占比</text></view>
+      <canvas type="2d" id="p-bars" class="c-bars"></canvas>
+      <view class="pnote">条形越短，说明该题型在本应用内更依赖提示。{{weakTypeText}}</view>
+      <view wx:if="{{untouched}}" class="pnote">还没练过：{{untouched}}。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">近六次趋势</text><text class="hint">无提示完成率</text></view>
+      <canvas type="2d" id="p-line" class="c-line"></canvas>
+      <view class="pnote">单次起伏属于正常现象，建议看连续三次以上的走向，而不是某一次的分数。</view>
+    </view>
+
+    <view class="psec"><text class="idx">三</text><text class="h">最近练习</text><text class="tail">时间线</text></view>
+    <view class="card">
+      <block wx:for="{{logs}}" wx:key="id">
+        <view wx:if="{{index < 5}}" class="logrow">
+          <view class="logtop">
+            <text class="d">{{item.date}}</text>
+            <text class="ltitle">{{item.type}} · 无提示 {{item.pct}}%</text>
+          </view>
+          <view class="logmeta">{{item.title}}（{{item.indep}}/{{item.total}} 步独立完成）</view>
+        </view>
+      </block>
+      <view class="linkbtn" data-tab="advice" bindtap="switchTab">看下一步该怎么练 →</view>
+    </view>
+
+    <view class="datanote">
+      <text class="dn-title">数据说明</text>
+      <text>样本：{{verdict.n}} 次练习，均来自本机记录。</text>
+      <text>分数反映在本应用内的提示依赖程度，不等同于考试成绩或能力测评。</text>
+      <text>练习次数少于 3 次的题型，建议只作观察，不急着判断掌握情况。</text>
+    </view>
+    <view class="footnote">记录只保存在这台设备 · 作答文字仅用于判分</view>
+    <view class="linkbtn" bindtap="toChild">← 回到孩子端</view>
+  </view>
+
+  <!-- 行动建议 -->
+  <view wx:if="{{tab === 'advice'}}" class="pwrap">
+    <view class="psec"><text class="idx">一</text><text class="h">整体判断</text><text class="tail">先看结论</text></view>
+    <view class="card verdict">
+      <view class="verdict-judge">{{verdict.judge}}</view>
+    </view>
+
+    <view class="psec"><text class="idx">二</text><text class="h">本周可以做的三件事</text><text class="tail">按优先级</text></view>
+    <view class="card">
+      <view wx:for="{{advices}}" wx:key="id" class="advice">
+        <view class="ateam">
+          <text class="pri">{{item.pri}}</text>
+          <text class="at-title">{{item.t}}</text>
+        </view>
+        <text class="advice-p">{{item.p}}</text>
+        <view class="evidence">{{item.why}}</view>
+        <view wx:if="{{item.say}}" class="say">可以这样说：「{{item.say}}」</view>
+      </view>
+    </view>
+
+    <view wx:if="{{adviceFollow}}" class="card">
+      <view class="card-h"><text class="h">上一轮之后</text><text class="hint">建议是否见效</text></view>
+      <view class="pnote">{{adviceFollow}}</view>
+      <view class="pnote">这是回写：先给建议，再看同一维度的变化，而不是只看做了多少题。</view>
+    </view>
+
+    <view class="psec"><text class="idx">三</text><text class="h">陪练与提问</text><text class="tail">照着说就行</text></view>
+    <view class="card">
+      <view class="card-h"><text class="h">可以陪他练这两道</text><text class="hint">按当前记录推荐</text></view>
+      <view wx:for="{{recs}}" wx:key="id" class="recrow" data-id="{{item.id}}" bindtap="openCase">
+        <text class="no">{{item.no}}</text>
+        <view class="main">
+          <text class="rm-title">{{item.title}}</text>
+          <text>{{item.type}} · L{{item.level}} · 约 {{item.minutes}} 分钟</text>
+        </view>
+        <text class="pill">去练</text>
+      </view>
+      <view class="pnote">{{recNote}}</view>
+      <view class="pnote">{{weakTypeText}}</view>
+    </view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">今晚可以试着这样问</text><text class="hint">三个问题</text></view>
+      <view class="script">
+        <view class="line"><text class="n">1</text>“这题你先别算，告诉我它在问什么。”</view>
+        <view class="line"><text class="n">2</text>“你觉得第一步先求出什么？为什么？”</view>
+        <view class="line"><text class="n">3</text>“如果我把这个条件换掉，答案会怎么变？”</view>
+      </view>
+      <view class="pnote">三个问题分别对应审题、建模和迁移，孩子答不上来也没关系，重点是让他把想法说出来。</view>
+    </view>
+
+    <view class="footnote">建议根据本机记录生成，供参考，不替代老师的观察与判断。</view>
+    <view class="linkbtn" bindtap="toChild">← 回到孩子端</view>
+  </view>
+
+  <!-- 练习记录 -->
+  <view wx:if="{{tab === 'log'}}" class="pwrap">
+    <view class="psec"><text class="idx">一</text><text class="h">练习记录</text><text class="tail">共 {{logs.length}} 次</text></view>
+    <view class="card">
+      <view class="psum">{{logSum}}</view>
+      <view wx:for="{{logs}}" wx:key="id" class="logrow">
+        <view class="logtop">
+          <text class="d">{{item.date}}</text>
+          <text class="ltitle">{{item.title}}</text>
+          <text class="pill {{item.cls}}">{{item.pct}}%</text>
+        </view>
+        <view class="logmeta">
+          <text class="mini">{{item.type}}</text>
+          <text>独立 {{item.indep}}/{{item.total}} 步</text>
+          <text class="dim">卡点：{{item.tag}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="psec"><text class="idx">二</text><text class="h">重复出现的理解偏差</text><text class="tail">仅作观察线索</text></view>
+    <view class="card">
+      <view class="pnote">{{confText}}</view>
+      <view class="pnote">出现次数少时可能只是偶发，建议结合下一次练习再判断。</view>
+    </view>
+
+    <view class="psec"><text class="idx">三</text><text class="h">模型接入</text><text class="tail">Key 只存云端</text></view>
+    <view class="card">
+      <view class="modrow">
+        <view>
+          <text class="mod-b">搭档模型</text>
+          <text class="mod-s">{{model.status}}</text>
+        </view>
+        <text class="pill {{model.pill === '已连接' ? 'ok' : ''}}">{{model.pill}}</text>
+      </view>
+      <view class="pnote">默认使用云端预置的模型。家长也可以换成自己的 API：Key 只写入云函数的环境变量或云数据库，不进客户端、不进练习记录。</view>
+      <view class="field">
+        <text class="lab">接口地址</text>
+        <input value="{{model.base}}" placeholder="https://api.deepseek.com/v1" bindinput="onBase" />
+      </view>
+      <view class="field">
+        <text class="lab">模型名</text>
+        <input value="{{model.model}}" placeholder="deepseek-chat" bindinput="onModelName" />
+      </view>
+      <view class="field">
+        <text class="lab">API Key</text>
+        <input value="{{model.key}}" password="{{true}}" placeholder="留空则保持不变" bindinput="onKey" />
+      </view>
+      <view class="mc-actions">
+        <button class="btn sm ghost" bindtap="testModel">测试连接</button>
+        <button class="btn sm" bindtap="saveModel">保存配置</button>
+      </view>
+      <view class="pnote">{{model.note}}</view>
+    </view>
+
+    <view class="footnote">记录只保存在这台设备 · 作答文字仅用于判分</view>
+    <view class="linkbtn" bindtap="toChild">← 回到孩子端</view>
+  </view>
+</block>

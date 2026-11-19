@@ -1,0 +1,9 @@
+{
+  "name": "judge",
+  "version": "1.0.0",
+  "description": "少年侦探社 · 判分代理与模型配置",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

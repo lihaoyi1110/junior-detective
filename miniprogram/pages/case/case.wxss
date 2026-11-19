@@ -1,0 +1,38 @@
+.dots { padding: 0 32rpx 18rpx; }
+.dots .d {
+  width: 12rpx; height: 12rpx; border-radius: 50%;
+  border: 1rpx solid var(--line); background: transparent; flex: none;
+}
+.dots .d.done { background: var(--green); border-color: var(--green); }
+.dots .d.now { background: var(--brick); border-color: var(--brick); transform: scale(1.4); }
+.dots .dl { flex: 1; height: 1rpx; background: var(--line-soft); }
+
+.chat { padding-bottom: 40rpx; }
+.chat-pad { height: 260rpx; }
+
+/* rich-text 不继承页面字号，这里显式给回正文排版 */
+.ai-body rich-text {
+  display: block;
+  font-size: 30rpx; line-height: 1.85; color: var(--ink);
+}
+.msg.intro .ai-body rich-text {
+  font-size: 24rpx; line-height: 1.9; color: var(--muted);
+}
+
+.typing .tdot {
+  width: 10rpx; height: 10rpx; border-radius: 50%;
+  background: var(--brass); margin-right: 10rpx;
+  animation: blink 1s infinite;
+}
+.typing .tdot:nth-child(2) { animation-delay: .15s; }
+.typing .tdot:nth-child(3) { animation-delay: .3s; }
+
+.send.off { opacity: .45; }
+
+.eyebrow.center { text-align: center; }
+.title { text-align: center; }
+.lead.center { text-align: center; }
+
+.closed .card { text-align: left; }
+.advice p { margin: 6rpx 0 0; }
+.advice b { font-family: var(--serif); }

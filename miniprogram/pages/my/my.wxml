@@ -1,0 +1,86 @@
+<view wx:if="{{isParent}}" class="pmast">
+  <view class="pmast-row">
+    <view>
+      <view class="pmast-title">账号与数据</view>
+      <view class="date">家长端 · 本机账号 · 不同步</view>
+    </view>
+    <view class="tag">家长模式</view>
+  </view>
+</view>
+<view wx:else class="masthead">
+  <view class="mast-row">
+    <view class="crest">WD</view>
+    <view class="mast-body">
+      <view class="mast-title">我的</view>
+      <view class="mast-sub">ACCOUNT &amp; DATA</view>
+    </view>
+  </view>
+</view>
+<view class="tartan thin"></view>
+<view class="dualbar">
+  <text class="mono">{{isParent ? '家长端 · 账号与数据' : '孩子端 · 账号与数据'}}</text>
+  <text class="mono">记录存在本机</text>
+</view>
+
+<view class="page">
+  <view class="eyebrow">账号 · ACCOUNT</view>
+  <view class="title">{{name}}</view>
+  <view class="lead">{{roleTag}} · 练习记录只在这台设备</view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">昵称</text><text class="hint">只存在这台设备</text></view>
+    <view class="namerow">
+      <input value="{{draftName}}" maxlength="12" placeholder="给孩子取个代号" bindinput="onNameInput" />
+      <button class="btn sm" bindtap="saveName">保存</button>
+    </view>
+    <view class="pnote">报告抬头用的是这个昵称，不必填真名。</view>
+  </view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">这台设备上的孩子</text><text class="hint">{{kids.length}} 位</text></view>
+    <view class="chips-row">
+      <view wx:for="{{kids}}" wx:key="id"
+            class="mini {{item.id === activeId ? 'on' : ''}}"
+            data-id="{{item.id}}" bindtap="switchKid">{{item.name}}</view>
+    </view>
+    <view class="namerow">
+      <input value="{{newKid}}" maxlength="12" placeholder="新孩子的代号" bindinput="onNewKidInput" />
+      <button class="btn sm" bindtap="addKid">添加</button>
+    </view>
+    <view class="pnote">每位孩子的档案、星图与练习记录分开保存；切换后，报告也会跟着切换。</view>
+  </view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">账号状态</text><text class="hint">本机账号</text></view>
+    <view wx:for="{{rows}}" wx:key="k" class="kv">
+      <text class="k">{{item.k}}</text>
+      <text class="v">{{item.v}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-h">
+      <text class="h">另一端</text>
+      <text class="hint">{{isParent ? '把手机还给孩子' : '给家长'}}</text>
+    </view>
+    <view wx:if="{{isParent}}">
+      <view class="pnote">孩子端能看到案卷、档案与徽章，看不到这份报告。</view>
+      <button class="btn ghost" bindtap="toChild">回到孩子端 →</button>
+      <button class="btn ghost" bindtap="backReport">返回报告</button>
+    </view>
+    <view wx:else>
+      <view class="pnote">家长端是能力报告与陪练建议。孩子端看不到这部分内容，需要在这里交给家长打开。</view>
+      <button class="btn ghost" bindtap="toParent">把手机交给家长 →</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">数据与隐私</text><text class="hint">随时可查</text></view>
+    <view class="linkbtn" bindtap="viewConsent">重看声明</view>
+    <view class="linkbtn danger" bindtap="clearRecords">清空当前孩子的练习记录</view>
+    <view class="linkbtn danger" bindtap="signOut">退出账号</view>
+    <view class="pnote">退出只清除身份与同意记录，孩子档案与练习记录留在本机；清空记录只影响当前孩子，无法恢复。</view>
+  </view>
+
+  <view class="footnote">账号与记录都只在这台设备 · 换设备不会同步</view>
+</view>

@@ -1,0 +1,20 @@
+{
+  "name": "少年侦探社 · 解题档案",
+  "short_name": "侦探社",
+  "description": "用提问陪孩子拆解数学应用题，记录每一步的思考。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#123A2E",
+  "theme_color": "#123A2E",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

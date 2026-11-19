@@ -1,0 +1,9 @@
+.pmast-title { font-family: var(--serif); font-size: 38rpx; letter-spacing: 1rpx; font-weight: 600; }
+.pwrap { padding-top: 6rpx; }
+.psec:first-child { margin-top: 22rpx; }
+.diaglist { margin-top: 6rpx; }
+.logrow .logmeta { font-size: 20rpx; color: var(--muted); line-height: 1.8; }
+.logrow .mini { margin: 0 12rpx 0 0; }
+.psum { margin-bottom: 6rpx; }
+.recrow .main text { display: block; }
+.mc-actions .btn { margin-bottom: 0; }

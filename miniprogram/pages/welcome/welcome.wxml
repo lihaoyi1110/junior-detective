@@ -1,0 +1,102 @@
+<view class="wel">
+  <block wx:if="{{step === 'role'}}">
+    <view class="cover" style="padding-top:{{top}}px">
+      <view class="brand">
+        <view class="crest">WD</view>
+        <view class="brandtext">
+          <text class="kicker">JUNIOR DETECTIVE BUREAU</text>
+          <text class="brand-title">少年侦探社</text>
+        </view>
+      </view>
+
+      <text class="lead">数学题不会做，通常是卡在某一句。</text>
+      <text class="lead sub">华生只提问，陪你把题目拆成能回答的小问题。</text>
+
+      <view class="stats">
+        <view class="stat"><text class="n">{{caseCount}}</text><text class="u">份案卷</text></view>
+        <view class="stat"><text class="n">{{typeCount}}</text><text class="u">种题型</text></view>
+        <view class="stat"><text class="n">{{gradeText}}</text></view>
+      </view>
+    </view>
+
+    <view class="panel">
+      <view class="panelhead">
+        <text class="t">选择身份</text>
+        <text class="s">两端共用一份记录</text>
+      </view>
+
+      <view class="rolecard" hover-class="roleactive" data-role="child" bindtap="choose">
+        <view class="rc-ico">⌕</view>
+        <view class="rc-main">
+          <text class="rc-b">我是小侦探</text>
+          <text class="rc-s">挑案卷 · 答题 · 收徽章</text>
+        </view>
+        <text class="rc-arrow">→</text>
+      </view>
+
+      <view class="rolecard parent" hover-class="roleactive" data-role="parent" bindtap="choose">
+        <view class="rc-ico">▤</view>
+        <view class="rc-main">
+          <text class="rc-b">我是家长</text>
+          <text class="rc-s">看能力报告 · 拿陪练建议</text>
+        </view>
+        <text class="rc-arrow">→</text>
+      </view>
+
+      <text class="legal">练习记录只保存在这台设备，不同步云端</text>
+      <text class="legal">未满 14 周岁，请由监护人阅读声明后代为同意</text>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="consent" style="padding-top:{{top}}px">
+      <view class="wel-top">
+        <view class="crest square">§</view>
+        <text class="kicker">{{role === 'child' ? 'GUARDIAN NOTICE' : 'DATA & PRIVACY'}}</text>
+        <text class="c-title">开始前，先说清楚</text>
+        <text class="c-sub">{{role === 'child' ? '这几条请由监护人阅读。同意之后才会开始记录。' : '以下是这份报告背后的数据来源与边界。'}}</text>
+
+        <view class="citem">
+          <view class="cnum">一</view>
+          <view class="cbody">
+            <text class="cb">记录什么</text>
+            <text class="cp">每一道题里，你写的那句回答、有没有点提示、要不要重来，以及选了哪一类理解偏差。不录音、不录像，也不读取设备里的其他内容。</text>
+          </view>
+        </view>
+
+        <view class="citem">
+          <view class="cnum">二</view>
+          <view class="cbody">
+            <text class="cb">存在哪里</text>
+            <text class="cp">全部写在这台设备的本地存储里。换设备、清理数据或卸载都会丢；当前版本不同步到云端，服务器不保存练习记录。</text>
+          </view>
+        </view>
+
+        <view class="citem">
+          <view class="cnum">三</view>
+          <view class="cbody">
+            <text class="cb">判分时会发出什么</text>
+            <text class="cp">开启外部模型判分时，只有当前这一步的作答文字、题目本身和最近几句对话会发到云端判分接口；不发送姓名与身份。模型不可用时，全部在设备上按规则判断。</text>
+          </view>
+        </view>
+
+        <view class="citem">
+          <view class="cnum">四</view>
+          <view class="cbody">
+            <text class="cb">谁能看到</text>
+            <text class="cp">孩子端只能看到自己的档案；能力报告与陪练建议只在家长端，需要从「我的」里交给家长打开。</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="agree {{agreed ? 'on' : ''}}" bindtap="toggleAgree">
+        <view class="box"></view>
+        <text>{{role === 'child' ? '我已阅读上述说明，并同意按此方式记录；若使用者未满 14 周岁，本同意由监护人作出。' : '我已阅读上述说明，并同意按此方式查看与使用这些记录。'}}</text>
+      </view>
+
+      <button class="wbtn" disabled="{{!agreed}}" bindtap="confirm">同意并继续</button>
+      <button class="wbtn ghost" bindtap="backRole">换一个身份</button>
+      <text class="foot">{{role === 'child' ? '孩子端 · 待同意' : '家长端 · 待确认'}}</text>
+    </view>
+  </block>
+</view>

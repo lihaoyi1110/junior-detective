@@ -1,0 +1,97 @@
+<view class="masthead">
+  <view class="mast-row">
+    <view class="crest">WD</view>
+    <view class="mast-body">
+      <view class="mast-title">少年侦探社</view>
+      <view class="mast-sub">JUNIOR DETECTIVE BUREAU</view>
+    </view>
+    <view class="mast-right">
+      <text class="mast-num">{{solved}}</text>
+      <text>已破案卷</text>
+    </view>
+  </view>
+</view>
+<view class="tartan thin"></view>
+<view class="dualbar">
+  <text class="mono">孩子端 · 案卷大厅</text>
+  <text class="mono">共 {{total}} 卷 · 已勘 {{solved}}</text>
+</view>
+
+<view class="page">
+  <view class="eyebrow">今日委托 · 数学疑案</view>
+  <view class="title">案卷都在桌上，</view>
+  <view class="title tight">挑一个开始。</view>
+  <view class="lead">我是华生。我不给答案，只问问题——你每答一句，我就知道下一步该往哪儿走。</view>
+
+  <view class="filters">
+    <view class="filters-head" bindtap="toggleFilter">
+      <text>{{summary}}</text>
+      <text class="dim">{{count}} / {{total}} 份 · {{open ? '收起' : '筛选'}}</text>
+    </view>
+
+    <block wx:if="{{open}}">
+      <view class="filters-open">
+        <view class="lvrow">
+          <text class="lab">年级</text>
+          <view class="chips-row">
+            <view wx:for="{{gradeChips}}" wx:key="*this"
+                  class="mini {{fg === item ? 'on' : ''}}"
+                  data-v="{{item}}" bindtap="setGrade">{{item}}</view>
+          </view>
+        </view>
+        <view class="lvrow">
+          <text class="lab">题型</text>
+          <view class="chips-row">
+            <view wx:for="{{typeChips}}" wx:key="*this"
+                  class="mini {{ft === item ? 'on' : ''}}"
+                  data-v="{{item}}" bindtap="setType">{{item}}</view>
+          </view>
+        </view>
+        <view class="lvrow">
+          <text class="lab">难度</text>
+          <view class="chips-row">
+            <view wx:for="{{levelChips}}" wx:key="v"
+                  class="mini {{fl === item.v ? 'on' : ''}}"
+                  data-v="{{item.v}}" bindtap="setLevel">{{item.t}}</view>
+          </view>
+        </view>
+        <view wx:if="{{filtering}}" class="linkbtn danger" bindtap="clearFilter">清除筛选</view>
+      </view>
+    </block>
+  </view>
+
+  <block wx:for="{{groups}}" wx:for-item="g" wx:key="grade">
+    <view class="grade-head">
+      <text class="gh-name">{{g.grade}}</text>
+      <view class="gh-line"></view>
+      <text class="mono dim">{{g.items.length}} 卷</text>
+    </view>
+
+    <view wx:for="{{g.items}}" wx:key="id" wx:for-item="c"
+          class="ticket" hover-class="ticketactive"
+          data-id="{{c.id}}" bindtap="openCase">
+      <view class="ticket-top">
+        <text class="mono dim">{{c.no}}</text>
+        <view class="level">
+          <view wx:for="{{c.dots}}" wx:key="*this" wx:for-item="d" class="dot {{d ? 'on' : ''}}"></view>
+        </view>
+      </view>
+      <view class="ticket-title">{{c.title}}</view>
+      <view class="stem">{{c.stem}}</view>
+      <view class="chips-row">
+        <view class="mini on">{{c.type}}</view>
+      </view>
+      <view class="ticket-foot">
+        <text class="mono dim">{{c.grade}} · {{c.steps}} 问 · 约 {{c.minutes}} 分钟</text>
+        <text class="pill {{c.done ? 'ok' : ''}}">{{c.done ? '已勘' : '未勘'}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{!groups.length}}" class="empty">
+    <text class="eb">这个抽屉是空的</text>
+    <text class="es">换个年级、题型或难度看看。</text>
+  </view>
+
+  <view class="footnote">三～六年级 · L1 入门 / L2 进阶 / L3 挑战 · 每卷 5–6 问</view>
+</view>

@@ -1,0 +1,83 @@
+<block wx:if="{{!done}}">
+  <view class="casebar">
+    <text class="mono dim">{{meta.no}} · {{meta.type}} · L{{meta.level}}</text>
+    <text class="mono">{{idx + 1}}/{{total}}</text>
+  </view>
+
+  <view class="dots">
+    <block wx:for="{{dots}}" wx:key="index">
+      <view class="d {{item}}"></view>
+      <view wx:if="{{index < dots.length - 1}}" class="dl"></view>
+    </block>
+  </view>
+
+  <view class="stem-box">
+    <text class="cap">案卷原文 · {{meta.grade}}</text>
+    <text class="stem-text">{{meta.stem}}</text>
+  </view>
+
+  <view class="chat">
+    <view wx:for="{{msgs}}" wx:key="id"
+          class="msg {{item.who === 'ai' ? (item.intro ? 'intro' : 'ai') : 'kid'}}">
+      <block wx:if="{{item.who === 'ai'}}">
+        <view class="who">华生<text wx:if="{{item.intro}}" class="role">侦探助手</text></view>
+        <view wx:if="{{item.typing}}" class="typing"><view class="tdot"></view><view class="tdot"></view><view class="tdot"></view></view>
+        <view wx:else class="ai-body"><rich-text nodes="{{item.text}}"></rich-text></view>
+      </block>
+      <block wx:else>
+        <view class="who">你</view>
+        <view class="kid-body">
+          <text>{{item.text}}</text>
+          <view wx:if="{{item.verdict}}" class="verdict {{item.warn ? 'warn' : ''}}">{{item.verdict}}</view>
+        </view>
+      </block>
+    </view>
+    <view class="chat-pad"></view>
+  </view>
+
+  <view class="composer">
+    <view class="sugg">
+      <button data-t="不知道" bindtap="quick">我卡住了</button>
+      <button data-t="hint" bindtap="quick">给我一条线索</button>
+      <button data-t="reread" bindtap="quick">重读案卷</button>
+    </view>
+    <view class="inputrow">
+      <input value="{{draft}}" placeholder="用你自己的话说…" confirm-type="send"
+             disabled="{{busy}}" bindinput="onInput" bindconfirm="onConfirm" />
+      <view class="send {{busy ? 'off' : ''}}" bindtap="send">发送</view>
+    </view>
+  </view>
+</block>
+
+<view wx:else class="closed">
+  <view class="stamp">结案</view>
+  <view class="eyebrow center">{{closing.no}} · {{closing.type}}</view>
+  <view class="title">{{closing.title}}</view>
+  <view class="lead center">{{closing.lead}}</view>
+
+  <view class="medal-row">
+    <view class="medal"><text class="medal-num">{{closing.total}}</text><text>提问</text></view>
+    <view class="medal"><text class="medal-num">{{closing.indep}}/{{closing.total}}</text><text>独立完成</text></view>
+    <view class="medal"><text class="medal-num">{{closing.minutes}}′</text><text>用时</text></view>
+  </view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">搭档批注</text><text class="hint">给家长看</text></view>
+    <view wx:for="{{closing.advice}}" wx:key="id" class="advice">
+      <text class="advice-t">{{item.dim}}{{item.tag ? ' · ' + item.tag : ''}}</text>
+      <text class="advice-p">{{item.say}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-h"><text class="h">这道题留下的线索</text><text class="hint">下一步练什么</text></view>
+    <view class="chips-row">
+      <view wx:if="{{!closing.tags.length}}" class="mini on">全程独立</view>
+      <view wx:for="{{closing.tags}}" wx:key="*this" class="mini">{{item}}</view>
+    </view>
+    <view class="pnote">哪一步用了提示，就意味着那里还能再稳一点。</view>
+  </view>
+
+  <button class="btn" bindtap="backHome">再挑一个案子</button>
+  <button class="btn ghost" bindtap="toParent">把报告给家长看</button>
+</view>

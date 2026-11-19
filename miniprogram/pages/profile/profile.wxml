@@ -1,0 +1,99 @@
+<view class="masthead">
+  <view class="mast-row">
+    <view class="crest">WD</view>
+    <view class="mast-body">
+      <view class="mast-title">我的侦探档案</view>
+      <view class="mast-sub">MY DETECTIVE FILE</view>
+    </view>
+    <view class="mast-right">
+      <text class="mast-num">{{solved}}</text>
+      <text>已破案卷</text>
+    </view>
+  </view>
+</view>
+<view class="tartan thin"></view>
+<view class="dualbar">
+  <text class="mono">孩子端 · 侦探档案</text>
+  <text class="mono">记录仅存本机</text>
+</view>
+
+<view class="page">
+  <view class="eyebrow">档案 · DETECTIVE FILE</view>
+  <view class="title">{{name}}</view>
+  <view class="lead">{{hasData ? rank + ' · 已经和搭档华生一起破了 ' + solved + ' 个案卷。' : '还没有勘过案卷。第一份委托在案卷大厅等着。'}}</view>
+
+  <view class="kpis">
+    <view wx:for="{{kpis}}" wx:key="k" class="kpi">
+      <text class="kpi-num">{{item.n}}</text>
+      <text class="k">{{item.k}}</text>
+      <text class="s">{{item.s}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{!hasData}}" class="card">
+    <view class="card-h"><text class="h">档案还是空的</text><text class="hint">0 次练习</text></view>
+    <view class="pnote">完成一份案卷（五到六问），这里就会出现能力星图、第一枚徽章和最近的案子。</view>
+    <view class="pnote">星图回答的是「哪一步需要提示」，不是排名或分数。</view>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="card-h"><text class="h">能力星图</text><text class="hint">越靠外越稳</text></view>
+      <canvas type="2d" id="radar" class="radar-canvas"></canvas>
+      <view class="pnote">短的那一角，就是下一个要练的地方。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">侦探徽章</text><text class="hint">{{badges.length}} 枚</text></view>
+      <view class="chips-row">
+        <view wx:if="{{!badges.length}}" class="pnote">破第一个案子，就能拿到第一枚徽章。</view>
+        <view wx:for="{{badges}}" wx:key="*this" class="mini on">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-h">
+        <text class="h">错题本</text>
+        <text class="hint">{{wrongN ? wrongN + ' 处待复习' : '暂无'}}</text>
+      </view>
+
+      <block wx:if="{{wrong.length}}">
+        <view wx:for="{{wrong}}" wx:key="id" class="wcard"
+              hover-class="wactive" data-id="{{item.caseId}}" bindtap="openCase">
+          <view class="wcard-top">
+            <text class="no">{{item.no}} · {{item.dim}} · {{item.tag}}</text>
+            <text class="pill">重练 →</text>
+          </view>
+          <view class="wline ask">
+            <text class="lab">华生问</text>
+            <text class="txt">{{item.q}}</text>
+          </view>
+          <view wx:if="{{item.said}}" class="wline said">
+            <text class="lab">你答</text>
+            <text class="txt">{{item.said}}</text>
+          </view>
+          <view wx:if="{{item.reply}}" class="wline back">
+            <text class="lab">华生说</text>
+            <text class="txt">{{item.reply}}</text>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="pnote">这几次练习里没有卡住的步骤。想再往上走，可以挑 L3 的案卷。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-h"><text class="h">最近的案子</text><text class="hint">点开重看</text></view>
+      <view wx:for="{{recent}}" wx:key="caseId" class="recrow"
+            data-id="{{item.caseId}}" bindtap="openCase">
+        <text class="no">{{item.no}}</text>
+        <view class="main">
+          <text class="rm-title">{{item.title}}</text>
+          <text>{{item.type}} · 独立 {{item.indep}}/{{item.total}}</text>
+        </view>
+        <text class="pill {{item.full ? 'ok' : ''}}">{{item.full ? '满分' : '再看'}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="footnote">更细的能力报告，在「我的」里交给家长查看</view>
+</view>

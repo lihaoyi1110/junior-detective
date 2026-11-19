@@ -1,0 +1,33 @@
+.page { padding-top: 36rpx; }
+.title.tight { margin-top: -8rpx; }
+
+.filters-head {
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+.filters-head text:first-child { font-family: var(--serif); letter-spacing: 1rpx; }
+.filters-head text:last-child { font-family: var(--mono); font-size: 19rpx; }
+
+.ticket-title {
+  font-family: var(--serif); font-size: 38rpx; font-weight: 600;
+  line-height: 1.45; margin-bottom: 10rpx; letter-spacing: 1rpx;
+}
+/* 按下时票根下沉、硬阴影收紧，模拟纸张被按在桌面 */
+.ticketactive {
+  background: #FAF4E4;
+  transform: translate(3rpx, 3rpx);
+  box-shadow: 3rpx 3rpx 0 rgba(32, 32, 27, .07);
+}
+
+.dot {
+  width: 12rpx; height: 12rpx; border-radius: 50%;
+  background: var(--line); margin-left: 8rpx;
+}
+.dot.on { background: var(--brick); }
+
+.empty {
+  padding: 60rpx 20rpx; text-align: center;
+  border: 1rpx dashed var(--line); background: var(--card);
+}
+.empty .eb { display: block; font-family: var(--serif); font-size: 28rpx; color: var(--green); }
+.empty .es { display: block; margin-top: 8rpx; font-size: 22rpx; color: var(--muted); }

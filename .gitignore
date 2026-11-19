@@ -1,0 +1,24 @@
+# 密钥与本地配置：绝不提交
+.env
+*.local.json
+prototype/model.local.json
+prototype/.devcert/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.trae/
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# 依赖与缓存
+node_modules/
+.pnpm-store/
+
+# 本地产物
+.trae-html-share-packages/
+*.log
