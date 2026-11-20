@@ -3,7 +3,7 @@
    有模型时走模型，没有模型时静默使用本地规则
    ========================================================== */
 (function(){
-  const PRAISE = ['对。','没错。','就是这样。','很好。'];
+  const PRAISE = ['对。','没错。','就是这样。','很好。','说清楚了。','这一步走通了。','在点子上。','接着来。'];
   const VLABEL = {
     ok:'理解正确', partial:'方向对了，再具体一点',
     confuse:'发现一个理解偏差', idk:'需要搭把手', off:'这次没有对上问题'
@@ -632,6 +632,7 @@
       + '<p class="pnote">'+c.independentSay[1]+'</p></div>'
       + (failed.length ? '<button class="btn brass" data-review>只重答卡住的 '+failed.length+' 步</button>'
           + '<p class="reviewnote">只重走这几处，确认是不是真的弄懂了。不影响上面的分数，重审结果会单独记一条。</p>' : '')
+      + '<button class="btn ghost" data-replay>再练一遍这卷</button>'
       + '<button class="btn" data-back>再挑一个案子</button>'
       + '<button class="btn ghost" data-parent>把报告给家长看</button>'
       + '</div>';
@@ -916,6 +917,15 @@
         });
     };
 
+    /* 结案页：这一卷再练一遍，作为一条新的练习记录 */
+    const replay = app.querySelector('[data-replay]');
+    if(replay) replay.onclick = ()=>{
+      if(!V || !V.done) return;
+      const c = V.c;
+      stopVoice(true); closePad();
+      start(c);
+    };
+
     /* 结案页：只把搭过手的那几步挑出来重答 */
     const rev = app.querySelector('[data-review]');
     if(rev) rev.onclick = ()=>{
@@ -1003,5 +1013,22 @@
     if(par) par.onclick = ()=>window.App.askParent();
   }
 
-  window.CaseView = {open};
+  /* 从错题本直接重练某一个卡点：不必整卷重来，重审不写档案 */
+  function openStepReview(caseId, stepIndex){
+    const c = CASES.find(x=>x.id===caseId);
+    if(!c || !(stepIndex>=0) || stepIndex>=c.steps.length) return;
+    stopVoice(true); closePad();
+    V = { c, i:stepIndex, fails:0, mis:'', hints:0, partials:0, log:[], done:false,
+          stepWrong:null, busy:false, t0:Date.now(), spent:0, token:++seq, sketches:{},
+          voice:0, pad:false, stemOpen:false,
+          review:{ queue:[stepIndex], pos:0, ok:0, total:1, t0:Date.now(), solo:true } };
+    V.msgs = [
+      {who:'ai', text:'这是上次卡住的那一步。这次我不提醒，你自己来。'},
+      {who:'ai', text:stripAck(c.steps[stepIndex].q)}
+    ];
+    paint();
+    enterAnim();
+  }
+
+  window.CaseView = {open, openStepReview};
 })();

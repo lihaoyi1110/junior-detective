@@ -66,7 +66,7 @@
         const key = s.caseId + '#' + i;
         const prev = map.get(key);
         if(prev && prev.ts > s.ts) return;
-        map.set(key, {c, step:c.steps[i], ts:s.ts, fails:l.fails||0, mis:l.mis||'',
+        map.set(key, {c, step:c.steps[i], index:i, ts:s.ts, fails:l.fails||0, mis:l.mis||'',
           said:l.said||'', firstWrong:l.firstWrong||null});
       });
     });
@@ -363,9 +363,9 @@
           const fw = w.firstWrong || {};
           const said = String(fw.said || w.said || '').trim();
           const reply = String(fw.reply || '').trim() || (w.step.say || []).join(' ');
-          return '<article class="wcard" data-case="'+w.c.id+'">'
+          return '<article class="wcard" data-review-step="'+w.c.id+'#'+w.index+'">'
             + '<div class="wcard-top"><span class="mono dim">'+w.c.no+' · '+dimName(w.step.dim)
-            + ' · '+w.step.tag+'</span><span class="pill">重练 →</span></div>'
+            + ' · '+w.step.tag+'</span><span class="pill">重练这一步 →</span></div>'
             + '<div class="wline ask"><span class="mono">华生问</span><div class="txt">'+w.step.q+'</div></div>'
             + (said ? '<div class="wline said"><span class="mono">你答</span><div class="txt">'+esc(said)+'</div></div>' : '')
             + (reply ? '<div class="wline back"><span class="mono">华生说</span><div class="txt">'+reply+'</div></div>' : '')
@@ -692,6 +692,13 @@
     });
     app.querySelectorAll('[data-case]').forEach(el=>{
       el.onclick = ()=>window.CaseView.open(el.getAttribute('data-case'));
+    });
+    /* 错题本：直接重练卡住的那一步，不用整卷重来 */
+    app.querySelectorAll('[data-review-step]').forEach(el=>{
+      el.onclick = ()=>{
+        const parts = String(el.getAttribute('data-review-step')||'').split('#');
+        window.CaseView.openStepReview(parts[0], parseInt(parts[1],10));
+      };
     });
   }
 

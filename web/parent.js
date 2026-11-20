@@ -218,6 +218,40 @@
     return out.slice(0,3);
   }
 
+  /* 一键复制纯文字摘要：家长可以直接发给家人或老师，不用截图 */
+  function summaryText(all, diag){
+    const st = stats(all);
+    const name = (window.Account && Account.name()) || '孩子';
+    const dims = diag.dims.map(d=>{
+      const lv = dimLevel(d.score, d.n);
+      return d.name+' '+(d.score==null?'—':d.score)+'（'+lv.name+'）';
+    }).join('；');
+    const weak = diag.dims.filter(d=>d.score!=null && d.n>=3).sort((a,b)=>a.score-b.score)[0];
+    const adv = advices(all, diag).map((a,i)=>(i+1)+'. '+a.t).join('；');
+    return [
+      '少年侦探社 · 学习观察摘要',
+      name+' · 生成于 '+md(Date.now()),
+      '样本：'+st.n+' 次练习、'+st.steps+' 个作答步骤，无提示完成率 '+st.rate+'%。',
+      '五维：'+dims+'。',
+      weak ? '相对靠后：'+weak.name+'（'+weak.score+'，依据 '+weak.n+' 个作答步骤）。' : '样本还不足，先观察。',
+      '本周建议：'+adv+'。',
+      '说明：分数反映本应用内的提示依赖程度，不等同于考试成绩；每一步的明细可在家长端「练习记录」里逐条核对。'
+    ].join('\n');
+  }
+  function fallbackCopy(t){
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+    ta.remove(); return ok;
+  }
+  function copyText(t){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).then(()=>true, ()=>fallbackCopy(t));
+    }
+    return Promise.resolve(fallbackCopy(t));
+  }
+
   /* 近 7 天：家长最想先知道“这周练了没有、卡在哪、下一步做什么” */
   function weekCard(all){
     const recent = all.filter(s=>days(s.ts)<7);
@@ -317,6 +351,7 @@
     return '<div class="pwrap">'
       + '<div class="psec"><i>一</i><b>整体判断</b><span>先看结论</span></div>'
       + verdict(all, diag)
+      + '<div style="text-align:center;margin:-4px 0 6px"><button class="linkbtn" data-copy-report>复制文字版报告 · 可发给家人或老师</button></div>'
       + weekCard(all)
       + '<div class="psec"><i>二</i><b>能力证据</b><span>结论的依据</span></div>'
       + '<div class="card"><div class="card-h"><h3>五维诊断</h3><span class="hint">本应用内 · 越靠外越稳</span></div>'
@@ -527,6 +562,13 @@
     });
     const csvBtn = app.querySelector('[data-csv]');
     if(csvBtn) csvBtn.onclick = ()=>exportCsv(Store.all());
+    /* 复制文字版报告：给家长一个能直接转发出去的摘要 */
+    const cp = app.querySelector('[data-copy-report]');
+    if(cp) cp.onclick = ()=>{
+      copyText(summaryText(all, diag)).then(ok=>{
+        if(window.UI) UI.toast(ok ? '已复制，可以粘贴给家人或老师' : '复制失败，请改用导出 CSV');
+      });
+    };
 
     const clr = app.querySelector('[data-clear]');    if(clr) clr.onclick = ()=>{
       UI.confirm({kicker:'清空记录', title:'清空当前孩子的全部练习记录？',
