@@ -2357,3 +2357,13 @@ html[data-theme="dark"] .stem-box{
   .ticket{transition:transform .12s ease}
   .ticket:active{transform:scale(.985)}
 }
+
+/* ==========================================================
+   v0.23 手机端补强：刘海屏安全区
+   「添加到主屏幕」后以全屏运行时，顶部状态栏会盖住页头。
+   env() 在普通浏览器里为 0，只在全屏模式生效。
+   ========================================================== */
+.masthead{padding-top:calc(16px + env(safe-area-inset-top))}
+.casebar{padding-top:calc(12px + env(safe-area-inset-top))}
+.pmast{padding-top:calc(18px + env(safe-area-inset-top))}
+.pnav{top:env(safe-area-inset-top)}
