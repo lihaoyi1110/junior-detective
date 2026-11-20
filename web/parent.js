@@ -37,7 +37,7 @@
 
   function exportCsv(all){
     const head = ['日期时间','案卷编号','案卷','年级','题型','难度','第几步','维度','这一步考什么',
-      '是否独立通过','提示次数','答错次数','理解偏差','作答方式','通过时的作答','首次卡住时的作答'];
+      '是否独立通过','提示次数','答错次数','方向对但不具体','理解偏差','作答方式','通过时的作答','首次卡住时的作答'];
     const lines = [head.map(cell).join(',')];
     all.slice().sort((a,b)=>a.ts-b.ts).forEach(s=>{
       const c = CASES.find(x=>x.id===s.caseId);
@@ -48,7 +48,8 @@
         lines.push([
           stamp(s.ts), c.no, c.title, c.grade||'', c.type, 'L'+c.level,
           (i+1)+'/'+c.steps.length, dn?dn.name:(st.dim||''), st.tag||'',
-          ((l.fails||0)===0 ? '是' : '否'), l.hint||0, l.fails||0,
+          /* 与家长端口径一致：答过错或点过提示都不算独立 */
+          (((l.fails||0)===0 && !(l.hint||0)) ? '是' : '否'), l.hint||0, l.fails||0, l.partial||0,
           l.mis||'', (l.via==='voice' ? '语音' : (l.via==='quick' ? '快捷选项' : '键盘')),
           l.said||'', (l.firstWrong && l.firstWrong.said) || ''
         ].map(cell).join(','));
@@ -436,6 +437,7 @@
           + '<span>'+(o.stp.tag||'这一步')+'</span>'
           + (o.l.hint ? '<span>提示 '+o.l.hint+' 次</span>' : '')
           + (o.l.fails ? '<span>答错 '+o.l.fails+' 次</span>' : '')
+          + (o.l.partial ? '<span>方向对 '+o.l.partial+' 次</span>' : '')
           + (o.l.mis ? '<span class="dim">'+o.l.mis+'</span>' : '')
           + '<span>'+((o.l.via==='voice')?'语音作答':(o.l.via==='quick'?'快捷选项':'键盘作答'))+'</span>'
           + '</div></div>';

@@ -708,6 +708,8 @@
       next: nx ? nx.q : '',
       /* 最后一条是孩子刚说的这句，单独放在 answer 里，避免重复出现 */
       history: V.msgs.filter(m=>!m.typing && !m.intro).slice(-7,-1).map(m=>({who:m.who, text:String(m.text||'').replace(/<[^>]+>/g,'')})),
+      /* 第几次回答这一步（含本次）：模型据此决定支架要不要再搭小半格 */
+      attempt: V.fails + V.partials + 1,
       answer: text
     };
   }
@@ -797,7 +799,7 @@
         paint();
         return;
       }
-      V.log.push({fails:V.fails, hint:V.hints, said:text, ok:true, mis:V.mis,
+      V.log.push({fails:V.fails, hint:V.hints, partial:V.partials||0, said:text, ok:true, mis:V.mis,
         firstWrong:V.stepWrong, via:via||''});
       if(V.i >= V.c.steps.length-1){ finish(); return; }
       const praise = PRAISE[V.i % PRAISE.length];
@@ -812,9 +814,12 @@
       V.msgs.push({who:'ai', text: said + (said.indexOf(ask)>=0 ? '' : ' ' + ask)});
     }else if(kind==='partial'){
       V.partials++;
-      const said = (r.reply && r.reply.trim())
+      let said = (r.reply && r.reply.trim())
         ? replyOf(r.reply)
         : '你抓到的是“'+(r.label||'这个方向')+'”，方向没跑偏。我还想听更具体的一句：'+step.q;
+      /* 方向对但连续落不到实处：和答错一样累计，两次没走通就补一级提示，别让孩子兜圈 */
+      if((V.fails + V.partials) >= 2 && step.hint && String(said).indexOf(step.hint)<0)
+        said += '<div class="hintline">提示：'+step.hint+'</div>';
       V.msgs.push({who:'ai', text:said});
     }else{
       V.fails++;
@@ -822,7 +827,7 @@
       let reply = (r.reply && r.reply.trim()) ? replyOf(r.reply) : '没关系，我们退回到这一步：'+step.q;
       /* 错题本只留这一步的第一次卡壳：孩子当时怎么答、华生当时怎么回 */
       if(!V.stepWrong) V.stepWrong = {said:text, reply:plain(reply), kind};
-      if(V.fails>=2 && step.hint && String(reply).indexOf(step.hint)<0)
+      if((V.fails + V.partials) >= 2 && step.hint && String(reply).indexOf(step.hint)<0)
         reply += '<div class="hintline">提示：'+step.hint+'</div>';
       V.msgs.push({who:'ai', text:reply});
     }
