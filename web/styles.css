@@ -2296,3 +2296,64 @@ html[data-theme="dark"] .grade-more{
 .boot-tip{margin:0;font-size:11px;letter-spacing:.16em;color:rgba(232,205,147,.62)}
 @keyframes bootPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.045);opacity:1}}
 @media(prefers-reduced-motion:reduce){.boot-logo{animation:none}}
+
+/* ==========================================================
+   v0.22 视觉细化：字体 / 节奏 / 边框 / 家长端图标 / 动效
+   ========================================================== */
+
+/* ---- 字体：统计数字等宽对齐，两位数变化时不跳动 ---- */
+.mast-right b,.kpi b,.vstats b,.medal b,
+.diagrow .dh .score,.logtop .date,.ticket-foot,.mono{
+  font-variant-numeric:tabular-nums;
+}
+/* 大标题换行更均衡（不支持的浏览器自动忽略） */
+h1.title{text-wrap:balance}
+/* 卡片标题：字距与图标基线微调 */
+.card-h h3{font-size:15.5px;letter-spacing:.03em}
+
+/* ---- 家长端：模块节奏与标题图标 ---- */
+#app.parent .card{margin-bottom:16px}
+.psec{margin:24px 2px 10px}
+.pico{
+  display:inline-grid;place-items:center;width:16px;height:16px;
+  margin-right:7px;vertical-align:-2.5px;color:var(--brass);
+}
+.pico svg{width:16px;height:16px;display:block}
+html[data-theme="dark"] .pico{color:#D8B063}
+
+/* ---- 边框：案卷原文左侧绿条内补一条黄铜细线，像档案页的装订线 ---- */
+.stem-box{box-shadow:inset 4px 0 0 -3px rgba(181,138,60,.5),2px 2px 0 rgba(32,32,27,.045)}
+html[data-theme="dark"] .stem-box{
+  box-shadow:inset 4px 0 0 -3px rgba(216,176,99,.4),inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 rgba(0,0,0,.25);
+}
+
+/* ---- 动效：对话气泡分方向入场，像纸面上的一来一往 ---- */
+@keyframes riseL{from{opacity:0;transform:translate(-5px,8px)}to{opacity:1;transform:none}}
+@keyframes riseR{from{opacity:0;transform:translate(5px,8px)}to{opacity:1;transform:none}}
+.msg.ai{animation:riseL .28s cubic-bezier(.2,.8,.3,1)}
+.msg.kid{animation:riseR .28s cubic-bezier(.2,.8,.3,1)}
+@media(prefers-reduced-motion:reduce){.msg.ai,.msg.kid{animation:none}}
+
+/* ---- 桌面悬停：票根轻浮起、按钮微亮、链接补下划线 ---- */
+@media(hover:hover){
+  .ticket{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+  .ticket:hover{
+    transform:translateY(-2px);border-color:rgba(181,138,60,.55);
+    box-shadow:4px 6px 0 rgba(32,32,27,.08),0 12px 26px rgba(70,50,20,.1);
+  }
+  .btn{transition:transform .12s ease,filter .15s ease}
+  .btn:hover{filter:brightness(1.07)}
+  .linkbtn{transition:opacity .15s ease}
+  .linkbtn:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
+  .grade-more{transition:border-color .15s ease,background-color .15s ease}
+  .grade-more:hover{border-color:rgba(181,138,60,.55)}
+  .mini{transition:border-color .15s ease,background-color .15s ease,color .15s ease}
+  .pnav button{transition:background-color .15s ease,color .15s ease}
+  .tabbar button{transition:color .15s ease}
+}
+
+/* ---- 触摸按下：票根整体轻收，给出“点到了”的手感 ---- */
+@media(hover:none){
+  .ticket{transition:transform .12s ease}
+  .ticket:active{transform:scale(.985)}
+}

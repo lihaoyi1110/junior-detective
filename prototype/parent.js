@@ -26,6 +26,17 @@
   const days = ts => Math.floor((Date.now()-ts)/86400000);
   const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+  /* 卡片标题的细线图标：黄铜色，16px，与档案语言一致 */
+  const PICO = {
+    cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 9.5h17M8 3v3.2M16 3.2v3.3"/></svg>',
+    radar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 4l7 5.1-3 8.9H8l-3-8.9z"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>',
+    bars:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 19.5v-5M9.6 19.5V6.5M14.7 19.5v-8M19.8 19.5V9"/></svg>',
+    trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5 9.5 12l4 3.5L20 8.5"/><path d="M20 13V8.5h-4.5"/></svg>',
+    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M5 4.5h9.5A2.5 2.5 0 0 1 17 7v12.5H7.5A2.5 2.5 0 0 1 5 17z"/><path d="M8.5 9h5M8.5 12.5h4"/></svg>',
+    quote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14v9.5H10.5L5 19z"/><path d="M8.5 10h7M8.5 12.8h4.5"/></svg>'
+  };
+  const pico = k => '<span class="pico" aria-hidden="true">'+(PICO[k]||'')+'</span>';
+
   /* ---------- 导出：按“步骤”而不是按“次”，方便老师看过程 ---------- */
   const pad2 = n => (n<10?'0':'')+n;
   function stamp(ts){
@@ -284,7 +295,7 @@
     }
 
     return '<div class="card weekcard">'
-      + '<div class="card-h"><h3>本周回顾</h3><span class="hint">最近 7 天</span></div>'
+      + '<div class="card-h"><h3>'+pico('cal')+'本周回顾</h3><span class="hint">最近 7 天</span></div>'
       + '<div class="vstats">'
       + '<div><b>'+(recent.length||'—')+'</b><span>练习次数</span></div>'
       + '<div><b>'+(mins||'—')+'</b><span>累计分钟</span></div>'
@@ -355,13 +366,13 @@
       + '<div style="text-align:center;margin:-4px 0 6px"><button class="linkbtn" data-copy-report>复制文字版报告 · 可发给家人或老师</button></div>'
       + weekCard(all)
       + '<div class="psec"><i>二</i><b>能力证据</b><span>结论的依据</span></div>'
-      + '<div class="card"><div class="card-h"><h3>五维诊断</h3><span class="hint">本应用内 · 越靠外越稳</span></div>'
+      + '<div class="card"><div class="card-h"><h3>'+pico('radar')+'五维诊断</h3><span class="hint">本应用内 · 越靠外越稳</span></div>'
       + Charts.radar(diag.dims)
       + diagRows(diag)
       + '<p class="pnote">分数按“这一步是否用到提示”折算；n 是该维度累计的作答步骤数，少于 3 步时只作观察。</p></div>'
-      + '<div class="card"><div class="card-h"><h3>题型熟练度</h3><span class="hint">无提示完成占比</span></div>'
+      + '<div class="card"><div class="card-h"><h3>'+pico('bars')+'题型熟练度</h3><span class="hint">无提示完成占比</span></div>'
       + typeBody + '</div>'
-      + '<div class="card"><div class="card-h"><h3>近六次趋势</h3><span class="hint">无提示完成率</span></div>'
+      + '<div class="card"><div class="card-h"><h3>'+pico('trend')+'近六次趋势</h3><span class="hint">无提示完成率</span></div>'
       + Charts.line(t)
       + '<p class="pnote">单次起伏属于正常现象，建议看连续三次以上的走向，而不是某一次的分数。</p></div>'
       + '<div class="psec"><i>三</i><b>最近练习</b><span>时间线</span></div>'
@@ -398,12 +409,12 @@
       + '<div class="psec"><i>二</i><b>本周可以做的三件事</b><span>按优先级</span></div>'
       + '<div class="card">'+body+'</div>'
       + '<div class="psec"><i>三</i><b>陪练与提问</b><span>照着说就行</span></div>'
-      + '<div class="card"><div class="card-h"><h3>可以陪孩子练这两道</h3><span class="hint">按当前记录推荐</span></div>'
+      + '<div class="card"><div class="card-h"><h3>'+pico('book')+'可以陪孩子练这两道</h3><span class="hint">按当前记录推荐</span></div>'
       + recHtml
       + (weakType?'<p class="pnote">选择依据：「'+weakType.label+'」目前无提示完成率为 '+weakType.value
           + '%，已练习 '+weakType.n+' 次。</p>':'<p class="pnote">还没有练习记录，先按顺序各做一道即可。</p>')
       + '</div>'
-      + '<div class="card"><div class="card-h"><h3>今晚可以试着这样问</h3><span class="hint">三个问题</span></div>'
+      + '<div class="card"><div class="card-h"><h3>'+pico('quote')+'今晚可以试着这样问</h3><span class="hint">三个问题</span></div>'
       + '<div class="script"><p><i>1</i>“这题你先别算，告诉我它在问什么。”</p>'
       + '<p><i>2</i>“你觉得第一步先求出什么？为什么？”</p>'
       + '<p><i>3</i>“如果我把这个条件换掉，答案会怎么变？”</p></div>'
