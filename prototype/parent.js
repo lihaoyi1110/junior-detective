@@ -626,8 +626,7 @@
         if(note) note.textContent = '连接失败：'+e.message;
       }finally{ test.disabled = false; }
     };
-    /* 换标签时用品牌页过渡；页内筛选则保持原样 */
-    if(!same && window.PageVeil) window.PageVeil(320);
+    /* 标签切换不再盖品牌页，避免每次都闪一下 */
     window.scrollTo(0, same ? keepY : 0);
   }
 

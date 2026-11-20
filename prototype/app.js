@@ -698,7 +698,9 @@
   /* ---------------- 路由 ---------------- */
   /* 记录上一次停留的页面：同一页里的按钮切换保留滚动位置，换页才回到顶部 */
   let lastRoute = '';
-  /* 换页过渡：盖上品牌页（Logo + 加载中），短暂停留后淡出 */
+  let lastStage = null;
+  /* 品牌过渡只在“换身份/换端”时出现：启动、登录 → 首页、孩子端 ↔ 家长端。
+     普通换页只做一次轻淡入，不再盖 Logo，避免每点一下就闪一次。 */
   let veilT = null;
   function veil(ms){
     const b = document.getElementById('boot');
@@ -707,14 +709,17 @@
       clearTimeout(veilT);
       veilT = setTimeout(()=>b.classList.add('off'), ms == null ? 300 : ms);
     }
+    fade();
+  }
+  function fade(){
     const app = document.getElementById('app');
-    if(app){
-      app.classList.remove('screen-in');
-      void app.offsetWidth;
-      app.classList.add('screen-in');
-    }
+    if(!app) return;
+    app.classList.remove('screen-in');
+    void app.offsetWidth;
+    app.classList.add('screen-in');
   }
   window.PageVeil = veil;
+  window.PageFade = fade;
 
   function render(opt){
     const app = document.getElementById('app');
@@ -722,11 +727,14 @@
     const route = [acc.role||'', acc.consentAt?1:0, S.gate||'', S.tab||''].join('|');
     const stay = (opt && opt.keep) || route === lastRoute;
     lastRoute = route;
+    const stage = !acc.role ? 'login'
+      : (!acc.consentAt ? 'consent' : (acc.role==='parent' ? 'parent' : 'kid'));
+    const major = lastStage === null || stage !== lastStage;
+    lastStage = stage;
     const keepY = stay
       ? (window.pageYOffset || document.documentElement.scrollTop || 0) : null;
     const settle = ()=>{
-      /* 换页时先盖上品牌过渡（登录 → 首页、孩子端 → 家长端都有），再淡出 */
-      if(!stay) veil(320);
+      if(!stay){ if(major) veil(320); else fade(); }
       window.scrollTo(0, keepY == null ? 0 : keepY);
     };
 

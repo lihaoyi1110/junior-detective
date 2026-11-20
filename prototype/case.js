@@ -451,9 +451,9 @@
     };
   }
 
-  /* 从案卷大厅进入答题、或接着上次答，都做一次品牌过渡 */
+  /* 从案卷大厅进入答题只做轻淡入；品牌页只留给启动和换端 */
   function enterAnim(){
-    if(window.PageVeil){ window.PageVeil(300); return; }
+    if(window.PageFade){ window.PageFade(); return; }
     const el = document.getElementById('app');
     if(!el) return;
     el.classList.remove('screen-in');
@@ -706,7 +706,7 @@
             confuse:(step.confuse||[]).map(r=>r.label), tag:step.tag},
       next: nx ? nx.q : '',
       /* 最后一条是孩子刚说的这句，单独放在 answer 里，避免重复出现 */
-      history: V.msgs.filter(m=>!m.typing).slice(-7,-1).map(m=>({who:m.who, text:String(m.text||'').replace(/<[^>]+>/g,'')})),
+      history: V.msgs.filter(m=>!m.typing && !m.intro).slice(-7,-1).map(m=>({who:m.who, text:String(m.text||'').replace(/<[^>]+>/g,'')})),
       answer: text
     };
   }
@@ -733,13 +733,12 @@
     V.msgs.push({who:'kid', text, via});
     const kid = V.msgs[V.msgs.length-1];
 
-    /* 本地先判：判对就立即通过，不必等模型。
-       只要本地判成“还没说对”，且孩子说了半句以上的话，就请模型判断他到底卡在哪。 */
+    /* 能连上模型就交给它判断。本地规则只认关键词，孩子说“鸡有几只脚”
+       也会因为出现“鸡”被判对，看不出他其实没回答问题。 */
     const local = localResult(text);
     let r = null;
-    const ask = Engine.normalize(text);
-    const escalate = local.kind!=='ok' && ask.length>=4;
-    if(window.Model && Model.enabled() && escalate){
+    const escalate = text.length > 0;
+    if(window.Model && Model.enabled() && !V.modelOff && escalate){
       V.busy = true;
       V.msgs.push({who:'ai', typing:true});
       paint();
@@ -755,6 +754,16 @@
       if(!V || V.token !== token) return;
       V.msgs = V.msgs.filter(m=>!m.typing);
       V.busy = false;
+      /* 连续两次连不上就别再让孩子等：本次答题改用本机规则，刷新后重试 */
+      if(!r || !r.verdict){
+        V.modelFails = (V.modelFails||0) + 1;
+        if(V.modelFails >= 2){
+          V.modelOff = true;
+          if(window.UI) UI.toast('模型暂时连不上，先用本机规则陪你');
+        }
+      }else{
+        V.modelFails = 0;
+      }
     }
     const timedOut = !!(r && r.error === 'timeout');
     if(!r || !r.verdict){
