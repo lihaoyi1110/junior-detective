@@ -2,25 +2,24 @@
    少年侦探社 · 离线缓存
    策略：
    - 页面导航：先走网络，失败时回退到缓存的 index.html
-   - 静态资源：缓存优先，同时后台更新
+   - 静态资源：缓存优先 + 后台更新；同版本 SW 内的资源才互相匹配
    - /api/ 请求：完全交给网络，不缓存判分结果
-   构建脚本会写入构建时间作为缓存代号，部署后自动换新缓存。
+   
+   构建脚本会把 __BUILD__ 换成时间戳，每次部署必定换缓存代号。
+   
+   版本隔离：SW 缓存 key 带版本号，不同 ?v=NN 的资源互不相干，
+   彻底杜绝「旧 SW 缓存的旧脚本 + 新 index.html 的新资源」版本混配。
+   安装成功后主动 self.registration.update()，不等浏览器被动触发。
    ========================================================== */
-/* 缓存代号由「版本号 + 构建时间」组成：
-   - 生产构建把 __BUILD__ 换成时间戳，每次部署必定换新缓存；
-   - 直接预览 prototype 时 __BUILD__ 保持字面量，版本号一变缓存名就变，
-     不必等 SW 正文发生变化（正文不变时浏览器根本不会重新安装）。
-   查询串 ?v=NN 仍然只用来绕过 HTTP 缓存，不参与更新判断。 */
-const VER = new URL(self.location.href).searchParams.get('v') || '0';
-const CACHE = 'junior-detective-' + VER + '-__BUILD__';
 
-/* 写入缓存时去掉查询串：否则 app.js 与 app.js?v=16 会变成两条，
-   读到哪一条不确定，旧的那条会一直赢。 */
-function cacheKey(req){
-  const u = new URL(req.url);
-  u.search = '';
-  return u.toString();
-}
+/* SW 自己 URL 里的 ?v=NN —— 部署时一定和 index.html 同步 */
+const VER = new URL(self.location.href).searchParams.get('v') || '0';
+/* 缓存代号 = 版本号 + 构建时间戳 + 随机盐；每次部署换新 */
+const BUILD = '__BUILD__';
+const CACHE = 'junior-detective-v' + VER + '-' + BUILD;
+
+/* fetch 超时：某个资源永久挂起就放弃，不要卡住整个启动 */
+const FETCH_TIMEOUT = 15000;
 
 const ASSETS = [
   './',
@@ -47,10 +46,35 @@ const ASSETS = [
   'icon.svg'
 ];
 
+function timeoutFetch(req){
+  return new Promise((resolve) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+    fetch(req, { signal: ctrl.signal })
+      .then(r => resolve(r))
+      .catch(() => resolve(null))
+      .finally(() => clearTimeout(t));
+  });
+}
+
+/* 给资源 URL 补上当前版本的 querystring，确保和 SW 自己的版本匹配
+   —— 不同版本的 SW 各自管理自己版本的缓存，永不混配 */
+function versionedUrl(path){
+  const u = new URL(path, self.location.href);
+  u.searchParams.set('v', VER);
+  return u.toString();
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+      .then(cache => Promise.all(ASSETS.map(a => {
+        const url = versionedUrl(a);
+        return timeoutFetch(url).then(res => {
+          if (res && res.ok) return cache.put(url, res);
+          return null;
+        });
+      })))
       .then(() => self.skipWaiting())
   );
 });
@@ -60,6 +84,8 @@ self.addEventListener('activate', event => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+      /* 主动触发浏览器去拉新版 SW，不等用户下次打开页面 */
+      .then(() => { try { self.registration.update(); } catch(e){} })
   );
 });
 
@@ -73,29 +99,43 @@ self.addEventListener('fetch', event => {
 
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      timeoutFetch(req)
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put('index.html', copy)).catch(() => {});
-          return res;
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req.url, copy)).catch(() => {});
+            return res;
+          }
+          return caches.match(req);
         })
-        .catch(() => caches.match('index.html'))
     );
     return;
   }
 
+  /* 静态资源：只匹配当前版本的缓存条目，版本不匹配直接走网络
+     —— ignoreSearch:false 让 ?v=32 和 ?v=33 变成两条独立缓存，永不再混配 */
   event.respondWith(
-    caches.match(req, {ignoreSearch: true}).then(hit => {
-      /* 先给缓存，同时去网络取一次写回：下一次打开就是新文件，不用等 SW 更新 */
-      const net = fetch(req).then(res => {
+    caches.match(req, {ignoreSearch: false}).then(hit => {
+      const net = timeoutFetch(req).then(res => {
         if (res && res.ok) {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(cacheKey(req), copy)).catch(() => {});
+          caches.open(CACHE).then(c => c.put(req.url, copy)).catch(() => {});
+          return res;
         }
-        return res;
-      }).catch(() => null);
-      if (hit) { net.catch(() => {}); return hit; }
-      return net.then(res => res || new Response('', {status: 504}));
+        return hit || new Response('', {status: 504});
+      });
+      if (hit) return hit;
+      return net;
     })
   );
+});
+
+/* 收到消息就主动更新 —— index.html 启动时会发一条触发 */
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data && event.data.type === 'UPDATE_NOW') {
+    try { self.registration.update(); } catch(e){}
+  }
 });
