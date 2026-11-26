@@ -1,7 +1,11 @@
 /* ==========================================================
    Cloudflare Pages Function · POST /api/judge
    与 prototype/server.py 一一对应：同样的提示词、同样的请求体、
-   同样的 JSON 解析。密钥只存在 Pages 的环境变量里。
+   同样的 JSON 解析。
+
+   配置优先级：
+     1) 请求体里的 config（家长自己填的，只保存在家长的浏览器 localStorage）
+     2) Pages 环境变量 LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
 
    部署后需要配置的环境变量（Settings → Environment variables）：
      LLM_API_KEY  必填
@@ -145,16 +149,26 @@ async function postChat(url, body, key) {
   }
 }
 
-async function callModel(payload, env) {
-  const base = String(env.LLM_BASE_URL || 'https://api.deepseek.com/v1').replace(/\/+$/, '');
-  const model = env.LLM_MODEL || 'deepseek-chat';
-  const key = env.LLM_API_KEY;
+/* 合并配置：家长在请求里带的 config 优先，其次才是 Pages 环境变量 */
+function resolveConfig(reqConfig, env) {
+  const r = reqConfig || {};
+  const env_ = env || {};
+  const base = String(
+    (r.base && r.base.trim()) || env_.LLM_BASE_URL || 'https://api.deepseek.com/v1'
+  ).replace(/\/+$/, '');
+  const model = (r.model && r.model.trim()) || env_.LLM_MODEL || 'deepseek-chat';
+  const key = (r.key && r.key.trim()) || env_.LLM_API_KEY || '';
+  return { base, model, key, fromParent: !!(r.key && r.key.trim()) };
+}
+
+async function callModel(payload, cfg) {
+  if (!cfg.key) throw new Error('未配置模型 API Key');
   const messages = [
     { role: 'system', content: SYSTEM },
     { role: 'user', content: buildUserMsg(payload) }
   ];
   const body = {
-    model,
+    model: cfg.model,
     temperature: 0.3,
     top_p: 0.9,
     max_tokens: 420,
@@ -164,9 +178,12 @@ async function callModel(payload, env) {
 
   let lastErr = null;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const data = await postChat(base + '/chat/completions', body, key);
+    const data = await postChat(cfg.base + '/chat/completions', body, cfg.key);
     try {
-      return parseContent(data);
+      const out = parseContent(data);
+      out.source = cfg.fromParent ? 'parent' : 'env';
+      out.model = cfg.model;
+      return out;
     } catch (e) {
       lastErr = e;
       if (attempt === 0) {
@@ -175,26 +192,62 @@ async function callModel(payload, env) {
           { role: 'assistant', content: raw },
           { role: 'user', content: '上一条不是合法 JSON。请只输出一个 JSON 对象，字段为 verdict、understanding、misconception、reply。' }
         ]);
-        body.response_format = { type: 'json_object' };
       }
     }
   }
   throw lastErr || new Error('模型返回不可用');
 }
 
+/* 测试连接：家长想在保存前先跑一次 ping */
+async function testConnection(reqConfig, env) {
+  const cfg = resolveConfig(reqConfig, env);
+  if (!cfg.key) return { ok: false, error: '还没有填写 API Key' };
+  const t0 = Date.now();
+  try {
+    const data = await postChat(cfg.base + '/chat/completions', {
+      model: cfg.model,
+      temperature: 0.2,
+      max_tokens: 16,
+      messages: [{ role: 'system', content: '你是一个简洁的助手，只回一个词。' },
+                 { role: 'user', content: '回复"在线"两个字。' }]
+    }, cfg.key);
+    const reply = String((((data.choices || [])[0] || {}).message || {}).content || '').trim().slice(0, 20);
+    return { ok: true, model: cfg.model, base: cfg.base, ms: Date.now() - t0, reply };
+  } catch (e) {
+    return { ok: false, error: String(e.message || e) };
+  }
+}
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
-/* GET /api/judge 当作健康检查：告诉前端模型是否已配置 */
 export async function onRequestGet(context) {
   const env = context.env || {};
-  return json({ ok: !!env.LLM_API_KEY, model: env.LLM_MODEL || 'deepseek-chat', base: env.LLM_BASE_URL || 'https://api.deepseek.com/v1' });
+  const url = new URL(context.request.url);
+  const path = url.pathname.replace(/\/+$/, '');
+
+  if (path.endsWith('/api/model-config')) {
+    /* 服务器环境变量的公开视图（Key 不回传），供家长判断要不要自己填 */
+    return json({
+      base: env.LLM_BASE_URL || 'https://api.deepseek.com/v1',
+      model: env.LLM_MODEL || 'deepseek-chat',
+      configured: !!env.LLM_API_KEY,
+      source: 'server'
+    });
+  }
+  /* GET /api/judge 当作健康检查 */
+  return json({
+    ok: !!env.LLM_API_KEY,
+    model: env.LLM_MODEL || 'deepseek-chat',
+    base: env.LLM_BASE_URL || 'https://api.deepseek.com/v1'
+  });
 }
 
 export async function onRequestPost(context) {
   const env = context.env || {};
-  if (!env.LLM_API_KEY) return json({ error: '未配置 LLM_API_KEY' }, 503);
+  const url = new URL(context.request.url);
+  const path = url.pathname.replace(/\/+$/, '');
 
   let payload;
   try {
@@ -202,11 +255,30 @@ export async function onRequestPost(context) {
   } catch (e) {
     return json({ error: '请求体不是 JSON' }, 400);
   }
-  if (!payload || typeof payload.answer !== 'string') return json({ error: '缺少 answer' }, 400);
+  if (!payload) payload = {};
+
+  /* POST /api/model-test：家长的「测试连接」按钮 */
+  if (path.endsWith('/api/model-test')) {
+    return json(await testConnection(payload, env));
+  }
+  /* POST /api/model-config 在 Pages 上不落库，直接回显；
+     家长配置统一走浏览器 localStorage */
+  if (path.endsWith('/api/model-config')) {
+    const r = payload || {};
+    const base = String(r.base || '').trim();
+    const model = String(r.model || '').trim();
+    if (base && !/^https?:\/\//.test(base)) return json({ error: '接口地址需以 http(s):// 开头' }, 400);
+    if (base) await testConnection({ base, model, key: r.key }, env);
+    return json({ ok: true, message: '已保存到浏览器本地（家长端专属）' });
+  }
+
+  /* POST /api/judge — 核心判分 */
+  if (typeof payload.answer !== 'string') return json({ error: '缺少 answer' }, 400);
   if (payload.answer.length > 500) payload.answer = payload.answer.slice(0, 500);
 
+  const cfg = resolveConfig(payload.config, env);
   try {
-    const out = await callModel(payload, env);
+    const out = await callModel(payload, cfg);
     return json(out);
   } catch (e) {
     return json({ error: String(e.message || e) }, 502);

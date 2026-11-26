@@ -498,8 +498,8 @@
       + '<div class="card">'
       + '<div class="modrow"><div><b>语音识别</b><span data-stt>正在检测…</span></div><span class="pill" data-stt-pill>检测中</span></div>'
       + '<div class="modrow"><div><b>搭档模型</b><span data-model>正在检测…</span></div><span class="pill" data-model-pill>检测中</span></div>'
-      + '<p class="pnote">语音识别优先走服务端（配置 STT_API_KEY）；未配置时回退到浏览器识别。'
-      + '默认使用本机预置的模型。家长也可以换成自己的 API：Key 只写入这台电脑的服务端，不进浏览器、不进练习记录。</p>'
+      + '<p class="pnote">语音识别优先走服务端，未配置时回退到浏览器识别。'
+      + '默认使用部署端预置的模型；也可以在这里换成你自己的 API，Key 只存在这台设备的浏览器里，不上传服务器、不进练习记录。</p>'
       + '<label class="field"><span>接口地址</span><input id="mc-base" spellcheck="false" placeholder="https://api.deepseek.com/v1"></label>'
       + '<label class="field"><span>模型名</span><input id="mc-model" spellcheck="false" placeholder="deepseek-chat"></label>'
       + '<label class="field"><span>API Key</span><input id="mc-key" type="password" autocomplete="off" placeholder="留空则保持不变"></label>'
@@ -620,49 +620,58 @@
         if(sPill){ sPill.textContent = '降级'; sPill.className = 'pill'; }
       });
 
-    /* 模型接入：读的是本机服务端配置，Key 只回传掩码 */
+    /* 模型接入：家长可以填自己的 Key（只存这台设备 localStorage，
+       不走服务器）；没填时用部署端 /api/judge 里预置的默认 Key */
     const note = app.querySelector('[data-mc-note]');
     const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-    const fillConf = d=>{
-      if(!d) return;
-      const b = document.getElementById('mc-base'), m = document.getElementById('mc-model');
-      if(b && !b.value) b.value = d.base || '';
-      if(m && !m.value) m.value = d.model || '';
-      if(note) note.textContent = d.configured
-        ? '当前：'+(d.model||'模型')+' · Key '+(d.key||'已配置')
-          +(d.source==='local' ? '（家长配置）' : '（本机预置）')
-        : '当前未配置外部模型，判分使用本地规则。';
-    };
-    /* 本机预览有 server.py 提供的配置接口；线上 Pages 没有，Key 由部署环境统一配置 */
-    const host = location.hostname;
-    const isLocal = !host || host==='localhost' || host==='127.0.0.1'
-      || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+
+    const parentCfg = (window.Model && Model.parent()) || null;
     fetch('/api/model-config', {cache:'no-store'})
       .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-      .then(fillConf)
-      .catch(()=>{
-        if(note) note.textContent = isLocal
-          ? '没有连上本机服务，判分使用本地规则；用 python server.py 启动后可在此配置。'
-          : '线上版由部署环境统一配置模型（环境变量 LLM_API_KEY），这里不用填 Key；模型不可用时自动回退本地规则。';
-        if(!isLocal){
-          app.querySelectorAll('#mc-base,#mc-model,#mc-key,[data-mc-test],[data-mc-save]')
-            .forEach(el=>{ el.disabled = true; });
+      .then(d=>{
+        const b = document.getElementById('mc-base'), m = document.getElementById('mc-model');
+        /* 先填服务器的默认值，再用家长已保存的值覆盖 */
+        const p = parentCfg || {};
+        if(b && !b.value) b.value = (p.base || '') || d.base || '';
+        if(m && !m.value) m.value = (p.model || '') || d.model || '';
+        const hasServer = !!d.configured;
+        const hasParent = !!(p && p.key);
+        if(note){
+          if(hasParent) note.textContent = '当前：家长 Key · '+(p.model||'模型')+' · 可切换';
+          else if(hasServer) note.textContent = '当前：部署端默认 Key · '+(d.model||'模型')+' · 也可以换成你自己的';
+          else note.textContent = '当前没有配置 Key，判分使用本地规则。可以在这里填你自己的（只存本机）。';
         }
+      })
+      .catch(()=>{
+        /* 服务器没有 /api/model-config（旧部署），只显示家长本地配置 */
+        const p = parentCfg || {};
+        const b = document.getElementById('mc-base'), m = document.getElementById('mc-model');
+        if(b && !b.value) b.value = p.base || '';
+        if(m && !m.value) m.value = p.model || '';
+        if(note) note.textContent = p.key
+          ? '当前：家长 Key · '+(p.model||'模型')
+          : '未连接外部模型。可以在这里填你自己的 Key（只存本机）。';
       });
 
     const collect = ()=>({base:val('mc-base'), model:val('mc-model'), key:val('mc-key')});
     const save = app.querySelector('[data-mc-save]');
     if(save) save.onclick = async()=>{
+      const c = collect();
+      if(!c.base || !c.model){ if(note) note.textContent = '请填接口地址和模型名'; return; }
       save.disabled = true;
       try{
-        const r = await fetch('/api/model-config', {method:'POST',
-          headers:{'Content-Type':'application/json'}, body:JSON.stringify(collect())});
-        const d = await r.json();
-        if(!r.ok) throw new Error(d.error || ('HTTP '+r.status));
+        /* 先跑一次测试，再落盘 */
+        if(c.key){
+          const r = await fetch('/api/model-test', {method:'POST',
+            headers:{'Content-Type':'application/json'}, body:JSON.stringify(c)});
+          const d = await r.json();
+          if(!r.ok || !d.ok) throw new Error(d.error || ('HTTP '+r.status));
+        }
+        if(window.Model && Model.setParent) Model.setParent(c);
+        else Model.setConfig(c);
         const k = document.getElementById('mc-key'); if(k) k.value = '';
-        fillConf(d);
-        if(note) note.textContent = '已保存。下一次作答就会使用这个模型。';
-        if(mPill){ mPill.textContent = '已连接'; mPill.className = 'pill ok'; }
+        if(note) note.textContent = '已保存，只存在这台设备。下一次作答就用这个模型。';
+        if(mPill){ mPill.textContent = '家长 Key'; mPill.className = 'pill ok'; }
       }catch(e){
         if(note) note.textContent = '保存失败：'+e.message;
       }finally{ save.disabled = false; }
@@ -672,8 +681,9 @@
       test.disabled = true;
       if(note) note.textContent = '正在连接…';
       try{
+        const c = collect();
         const r = await fetch('/api/model-test', {method:'POST',
-          headers:{'Content-Type':'application/json'}, body:JSON.stringify(collect())});
+          headers:{'Content-Type':'application/json'}, body:JSON.stringify(c)});
         const d = await r.json();
         if(!r.ok || !d.ok) throw new Error(d.error || ('HTTP '+r.status));
         if(note) note.textContent = '连接成功：'+(d.model||'模型')+' · '+d.ms+'ms · 回复「'+(d.reply||'')+'」';

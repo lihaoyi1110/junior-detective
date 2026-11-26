@@ -266,14 +266,27 @@ def parse_content(data):
     return out
 
 
+def resolve_cfg(payload_cfg):
+    """合并配置：payload.config 优先，其次本机环境 / model.local.json。"""
+    c = payload_cfg or {}
+    base = str((c.get('base') or '').strip() or BASE).rstrip('/')
+    model = str((c.get('model') or '').strip() or MODEL)
+    key = str((c.get('key') or '').strip() or KEY).strip()
+    return {'base': base, 'model': model, 'key': key,
+            'from_parent': bool(c.get('key') and str(c.get('key')).strip())}
+
+
 def call_model(payload):
+    cfg = resolve_cfg(payload.get('config'))
+    if not cfg['key']:
+        raise RuntimeError('未配置 LLM_API_KEY')
     user_msg = build_user_msg(payload)
     messages = [
         {'role': 'system', 'content': SYSTEM},
         {'role': 'user', 'content': user_msg}
     ]
     body = {
-        'model': MODEL,
+        'model': cfg['model'],
         'temperature': 0.3,
         'top_p': 0.9,
         'max_tokens': 420,
@@ -285,9 +298,9 @@ def call_model(payload):
     last_err = None
     for attempt in range(2):
         data = post_json(
-            BASE + '/chat/completions',
+            cfg['base'] + '/chat/completions',
             body,
-            {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY}
+            {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg['key']}
         )
         try:
             return parse_content(data)
